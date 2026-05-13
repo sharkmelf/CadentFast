@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="charcoal">#0C0907</color>
+    <color name="charcoal_raised">#15100C</color>
+    <color name="oxblood">#4A1015</color>
+    <color name="smoked_clay">#4A3026</color>
+    <color name="ember">#6B2914</color>
+    <color name="copper">#B87333</color>
+    <color name="brushed_gold">#B8943D</color>
+    <color name="parchment">#E8DDC9</color>
+    <color name="parchment_dim">#A89A82</color>
+    <color name="restrained_red">#8B1A1A</color>
+</resources>

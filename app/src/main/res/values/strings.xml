@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CadentFast</string>
+    <string name="timer_channel_name">Your reservation</string>
+    <string name="timer_channel_description">A quiet, single notification while a fast is in progress.</string>
+    <string name="timer_notification_title">Your reservation is set.</string>
+    <string name="timer_notification_template">%1$s · %2$s to your table</string>
+    <string name="break_fast_notification_title">The kitchen is ready.</string>
+    <string name="break_fast_notification_body">Your %1$s is plated.</string>
+</resources>
