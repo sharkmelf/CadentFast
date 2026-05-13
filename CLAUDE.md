@@ -114,23 +114,30 @@ The app should feel like being recognized by name at a restaurant the user has b
 - Emoji-laden UI, cartoon mascots, gamified celebration
 - Any copyrighted or trademarked restaurant brand, menu, mark, photography, or identity used as more than private aesthetic reference
 
-## Open questions to resolve before scaffolding
+## Decisions for v1
 
-Before any code is written, agree with the user on:
+1. **Platform — Android-first, native (Kotlin + Jetpack Compose).** The owner is on Android and must be able to test on-device. Native gives the best image performance, smoothest premium motion, the strongest background-timer story (foreground service + AlarmManager + WorkManager), and the cleanest haptics/audio. iOS port is out of scope for v1; revisit after the loop is validated.
+2. **Catalog source — curated in-house.** Every dish entered by hand. The catalog is treated as an edited menu, not a database.
+3. **Food photography — AI-generated, with a strict art-direction gate.** Imagery is generated, reviewed by the food art director, and *rejected* if it reads as AI (warped hands, fused chopsticks, plastic noodles, off-grain rice). The roadmap explicitly plans to replace AI imagery cuisine-by-cuisine with commissioned partner shoots as restaurant relationships materialize. Use an AI service with unambiguous commercial-use rights.
+4. **"Find this near me" at break-fast — in v1.** Implies a places provider (default: Google Places, since Android-native). Discovery is a graceful add-on, not a blocker — if offline or rate-limited, break-fast still works without it.
+5. **Monetization — one-time purchase.** Browse and lock a reward without paying; the paywall sits at "begin fast," where craving-driven conversion is highest. The core lock-and-fast loop is never paywalled awkwardly once unlocked.
+6. **v1 cuisine — high-end Japanese wagyu (AYCE / yakiniku / premium small-format).** One cuisine, art-directed to perfection. Target catalog size: ~25–50 dishes. Confirm with the owner whether Korean BBQ wagyu cuts also belong in v1 or wait for v2.
 
-1. **Platform target** — iOS-first (best vehicle for the premium feel), cross-platform native (Swift + Kotlin), cross-platform framework (Flutter / React Native / Expo), or web/PWA?
-2. **Catalog source** — curated in-house (most premium, most expensive), licensed dataset (faster), or hybrid?
-3. **Food photography pipeline** — commissioned shoots, licensed library, AI-generated reference imagery (with clear policy on whether AI imagery is acceptable for a premium brand), or a combination?
-4. **Geographic restaurant discovery** — is "find this near me" at break-fast in v1 or later? Implies a places API and licensing decisions.
-5. **Monetization stance** — free, one-time purchase, or subscription? Whatever the answer, the core "lock a reward and fast toward it" loop is never paywalled awkwardly.
-6. **Cuisine list for v1** — the audience section is the long list; pick a smaller starting set that can be done excellently rather than a wide set done generically.
+## Open considerations
+
+- **AI imagery is the biggest brand risk.** A bad image undermines the entire premium feel more than any other defect. The food art director's reject gate is the hill to die on.
+- **Restaurant partnerships are the long-term photography source.** Design the catalog schema so a dish can swap its imagery (AI → commissioned) without losing its identity, lock history, or personalization data.
+- **Places provider lock-in.** Google Places is the path of least resistance on Android but carries per-call cost; if the app grows, evaluate Foursquare/Mapbox+OSM. Wrap the provider behind an interface from day one.
+- **Paywall placement** is a real design decision, not an afterthought — it deserves the same care as the timer screen.
+- **Restaurant partnership terms.** When deals are made, lock down: photography license, exclusivity, take-down rights, and how a partner dish is marked (subtly — never as an ad).
 
 ## Working with this repo
 
 - Default working branch for this task: `claude/create-claude-md-fasting-F9UUq`.
 - GitHub MCP scope is limited to `sharkmelf/cadentfast`.
-- No stack is committed yet. Do not scaffold until the open questions above are answered.
-- When you do scaffold, keep the dependency footprint tight. Premium feel is hand-built, not glued together from a dozen libraries.
+- **Stack:** Android, Kotlin, Jetpack Compose, Material 3 with heavy custom theming. Coil for images. Foreground service + AlarmManager + WorkManager for the timer. Room or DataStore for local persistence. Google Places (wrapped behind an interface) for discovery. Google Play Billing for one-time purchase.
+- Keep the dependency footprint tight. Premium feel is hand-built, not glued together from a dozen libraries.
+- Minimum SDK: pick a recent floor (target Android 14/15, min 26 or higher). Premium audience tolerates a tighter device matrix in exchange for a better experience.
 
 ## The agent team
 
@@ -143,13 +150,15 @@ When the user asks for "an optimal team of agents," propose roles that map to th
 - **Motion designer** — slow, weighty transitions; the hero dish's breathing motion; the countdown sweep; the break-fast reveal.
 - **Sound designer** — the single break-fast chime, the optional ambient room tone, the haptic vocabulary. One signature sonic moment, not a sound library.
 - **Copywriter** — dish descriptions and UI voice in the maître-d' register: anticipatory, indulgent, confident, forgiving. Owns the language of milestones and the language of giving up.
-- **Culinary curator** — builds the catalog across the chosen cuisines with accurate portions and approximate calorie counts; owns shot lists; sources or commissions photography.
-- **Mobile app engineer** — implements the flow on the chosen platform; image performance and timer reliability are the hard parts.
-- **Timer & state engineer** — background-safe, drift-free fasting timer; survives kill, sleep, reboot, time-zone change, DST.
+- **Culinary curator** — builds the v1 wagyu catalog with accurate portions and approximate calorie counts; owns shot lists for the AI imagery pipeline and, later, partner shoots.
+- **Android engineer** — Kotlin / Jetpack Compose / Material 3 custom theme / Coil. Owns the cuisine → dish → lock → timer flow and image performance.
+- **Timer & state engineer** — foreground service + AlarmManager + WorkManager; background-safe, drift-free fasting timer that survives kill, doze, sleep, reboot, time-zone change, and DST.
 - **Search engineer** — fast, forgiving near-keyword search over the catalog (typo-tolerant, synonym-aware across cuisines and dish aliases).
 - **Personalization engineer** — the "regular at the restaurant" memory: usuals, recents, gentle surfacing without nagging.
+- **Discovery / geo engineer** — "find this near me" at break-fast. Owns the Google Places integration behind a provider interface; designs the offline/rate-limit graceful-degrade path.
+- **Commerce engineer** — Google Play Billing for one-time purchase. Owns paywall placement (at "begin fast"), purchase restoration, and refund-safe state.
 - **QA & device tester** — timer accuracy across backgrounding scenarios; image fidelity across devices; no jank on the hero screen; accessibility verification.
-- **Accessibility & inclusion specialist** — contrast in the dark palette, dynamic type, VoiceOver for image-heavy screens, reduced motion, dignity of copy in sensitive moments.
-- **Legal & IP reviewer** — confirms zero infringement on restaurant brands, photography licenses, font licensing, and trademarks.
+- **Accessibility & inclusion specialist** — contrast in the dark palette, dynamic type, TalkBack for image-heavy screens, reduced motion, dignity of copy in sensitive moments.
+- **Legal & IP reviewer** — confirms zero infringement on restaurant brands, photography licenses, font licensing, trademarks; vets AI-imagery service commercial-use terms and future restaurant-partnership contracts.
 
 **Tailor the team to the slice of work the user actually wants built next.** Do not spawn all of them by default. Ask which slice to build first, then delegate only the roles that slice needs.
