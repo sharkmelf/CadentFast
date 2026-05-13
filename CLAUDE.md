@@ -61,6 +61,40 @@ The aesthetic target is the feeling of being seated at the best table in a high-
 
 This is the *feeling* of the best room you've ever eaten in. No logos, marks, palettes, illustrations, photography, menu copy, fonts, or other proprietary identity from any real restaurant brand. All assets must be original or properly licensed.
 
+## The hero timer screen
+
+The most-looked-at screen in the app. The dish is the protagonist, the timer is the supporting character, and they share one frame without competing.
+
+**Layout.** The dish photograph fills the top of the screen — full-bleed, the most cinematic crop, no letterboxing, no app chrome above it. Below the image sits a quiet typographic block: time remaining, a one-line maître-d' sub-line, and a thin metallic progress arc. Nothing else. No tabs, no badges, no toolbars. The image gets the room; the timer gets the bottom of a magazine page.
+
+**Type.** Time is set in the editorial serif, large enough to read at arm's length but quiet in weight — confident, not shouty. The sub-line is in the humanist sans, small, restrained.
+
+**Time formatting** follows restaurant cadence, not stopwatch:
+
+- More than an hour out: "13h 47m"
+- Within the hour: "47 minutes"
+- Within five minutes: "Any moment now"
+- At zero: "Now."
+
+Offer an alternate clock-time display as a setting ("Your table at 7:12 PM"). Some users anchor better to a time of arrival than a duration.
+
+**Breathing.** The dish photograph oscillates in scale by 1–2% over a 6–8 second cycle — slow enough to feel alive, never enough to feel animated. Reduced-motion users see a still image with no breathing.
+
+## Anticipation, by design
+
+The hero screen must make the user *feel* the meal approaching, not just read a countdown. Numbers ticking down do not produce that feeling. Stacked quiet design moves do. None of these alone would work; together they create the "if I just hold on a little longer, the wagyu is going to be even better" effect.
+
+- **The dish ripens.** A single hero photograph per dish is *dynamically graded* by the app as the fast progresses. Early in the fast, the grade is low-key — slightly cool, slightly desaturated, lighting waiting. As time passes, the grade walks toward the fully realized hero version: warmth comes up, saturation deepens, highlights bloom on the sear, the oil glistens. The user is literally watching the meal become ready. Each glance shows a more vivid dish than the glance before. Achievable with one master image per dish and a parameterized grading layer — no need for multiple commissioned shots.
+- **The room warms.** A warm radial gradient — copper, ember — sits behind the dish photo and grows in intensity as the fast nears its end. Faint early, glowing late. Sells "the grill is being fired up" without ever showing flame.
+- **Steam intensifies.** For hot dishes, a subtle steam animation overlays the image. Early: barely there. Late: dense, curling, drifting across the frame.
+- **Language softens with proximity.** Numbers persist for clarity, but the sub-line shifts from clinical to anticipatory as milestones pass: *"Your table is being prepared." → "Halfway to the table." → "The kitchen is plating." → "Almost ready." → "Any moment now."* Pacing language, not motivation language.
+- **Sound (opt-in).** Ambient room tone evolves from "early, kitchen quiet" toward "kitchen mid-service" as the fast nears completion — distant cutlery, faint sizzle of a grill, a plate being set down somewhere. At zero, the single signature chime.
+- **Haptics as anticipation.** A whisper at midway and pre-arrival, more felt than noticed. A deeper, fuller resonance at break-fast — like a bell rung at the kitchen pass.
+- **Progress as a metallic sweep.** Not a percentage bar. A thin gold or copper arc tracing the bottom of the dish, filling slowly. No labels, no numbers on it.
+- **The break-fast reveal.** When the timer hits zero, a slow 2–3 second hand-off: the timer block dissolves, the dish takes the full screen at full grade, the chime sounds, a deep haptic confirms. Then a single button — *"Begin."* — that opens the "find this near me" hand-off or quietly logs the meal and closes.
+
+The trick is that none of these is loud. Each is a small, slow, premium move. Stacked, they pull the user forward without ever shaming them for being there.
+
 ## Voice & copy
 
 - Anticipatory: *"Your table is being set."*
@@ -118,10 +152,10 @@ The app should feel like being recognized by name at a restaurant the user has b
 
 1. **Platform — Android-first, native (Kotlin + Jetpack Compose).** The owner is on Android and must be able to test on-device. Native gives the best image performance, smoothest premium motion, the strongest background-timer story (foreground service + AlarmManager + WorkManager), and the cleanest haptics/audio. iOS port is out of scope for v1; revisit after the loop is validated.
 2. **Catalog source — curated in-house.** Every dish entered by hand. The catalog is treated as an edited menu, not a database.
-3. **Food photography — AI-generated, with a strict art-direction gate.** Imagery is generated, reviewed by the food art director, and *rejected* if it reads as AI (warped hands, fused chopsticks, plastic noodles, off-grain rice). The roadmap explicitly plans to replace AI imagery cuisine-by-cuisine with commissioned partner shoots as restaurant relationships materialize. Use an AI service with unambiguous commercial-use rights.
+3. **Food photography — AI-generated as MVP placeholder, replaced over time.** AI imagery is the v1 MVP source — fast, cheap, controllable. The food art director runs a strict reject gate (warped hands, fused chopsticks, plastic noodles, off-grain rice all get killed). The roadmap explicitly plans to replace AI imagery with higher-quality alternatives — licensed stock, commissioned shoots, or restaurant-partner photography — cuisine-by-cuisine as the catalog matures. Use an AI service with unambiguous commercial-use rights. Design the catalog schema so a dish can swap its imagery without losing identity, lock history, or personalization data.
 4. **"Find this near me" at break-fast — in v1.** Implies a places provider (default: Google Places, since Android-native). Discovery is a graceful add-on, not a blocker — if offline or rate-limited, break-fast still works without it.
 5. **Monetization — one-time purchase.** Browse and lock a reward without paying; the paywall sits at "begin fast," where craving-driven conversion is highest. The core lock-and-fast loop is never paywalled awkwardly once unlocked.
-6. **v1 cuisine — high-end Japanese wagyu (AYCE / yakiniku / premium small-format).** One cuisine, art-directed to perfection. Target catalog size: ~25–50 dishes. Confirm with the owner whether Korean BBQ wagyu cuts also belong in v1 or wait for v2.
+6. **v1 cuisine — high-end Japanese wagyu only (AYCE / yakiniku / premium small-format).** One cuisine, art-directed to perfection. Target catalog size: ~25–50 dishes. The expansion strategy is **one cuisine at a time** — each new cuisine added only when it can match the v1 quality bar. Korean BBQ wagyu, sushi, dumplings, ramen, etc. follow in their own releases.
 
 ## Open considerations
 
@@ -145,7 +179,7 @@ When the user asks for "an optimal team of agents," propose roles that map to th
 
 - **Creative director** — owns the AYCE-premium feeling end to end; the single voice that vetoes anything drifting toward wellness-app generic. Final say on aesthetic.
 - **Brand & identity designer** — original wordmark, palette, type system, metallic accent treatment, iconography. Guarantees no real-restaurant IP leaks in.
-- **Food art director** — sourcing, commissioning, and grading licensed cinematic food imagery. Owns the consistency of the catalog as a visual whole.
+- **Food art director** — sourcing AI imagery and grading it to spec for v1; running the reject gate; owning the dynamic-grading curve that ripens the dish on the timer screen; designing the eventual hand-off to stock/commissioned/partner photography. Owns the consistency of the catalog as a visual whole.
 - **Product designer (UX)** — the cuisine → dish → lock → timer flow, the search interaction, the reward-pinned timer screen, the break-fast moment, the empty/error/loading states.
 - **Motion designer** — slow, weighty transitions; the hero dish's breathing motion; the countdown sweep; the break-fast reveal.
 - **Sound designer** — the single break-fast chime, the optional ambient room tone, the haptic vocabulary. One signature sonic moment, not a sound library.
