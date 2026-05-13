@@ -167,11 +167,46 @@ The app should feel like being recognized by name at a restaurant the user has b
 
 ## Working with this repo
 
-- Default working branch for this task: `claude/create-claude-md-fasting-F9UUq`.
+- Default working branch for this CLAUDE.md task: `claude/create-claude-md-fasting-F9UUq`.
 - GitHub MCP scope is limited to `sharkmelf/cadentfast`.
-- **Stack:** Android, Kotlin, Jetpack Compose, Material 3 with heavy custom theming. Coil for images. Foreground service + AlarmManager + WorkManager for the timer. Room or DataStore for local persistence. Google Places (wrapped behind an interface) for discovery. Google Play Billing for one-time purchase.
+- **Stack:** Android, Kotlin, Jetpack Compose, Material 3 with heavy custom theming. Coil for images. Foreground service + AlarmManager + WorkManager for the timer. DataStore for local persistence (Room only if/when relational queries are actually needed). Google Places (wrapped behind an interface) for discovery. Google Play Billing for one-time purchase.
 - Keep the dependency footprint tight. Premium feel is hand-built, not glued together from a dozen libraries.
 - Minimum SDK: pick a recent floor (target Android 14/15, min 26 or higher). Premium audience tolerates a tighter device matrix in exchange for a better experience.
+
+## The first slice — vertical, end-to-end
+
+Before scaffolding any other code, build the **thinnest end-to-end loop** that proves the product on the owner's device. Everything else waits.
+
+**In scope:**
+
+- **Lock screen** — a hardcoded list of 3–5 Japanese wagyu dishes. Tap one to lock it as the reward.
+- **Duration screen** — exactly three presets: **15m / 1h / 4h**. The short windows are for iteration; the 4h option is the only "real" fast in the slice.
+- **Hero timer screen** — full-bleed dish on top, quiet typographic timer block below, the dynamic-grading progression ("the dish ripens"), the breathing motion, the metallic progress arc, the maître-d' sub-line softening with proximity.
+- **Break-fast screen** — slow 2–3s reveal at zero, single signature chime, deep haptic, one *"Begin."* button that closes back to home.
+- **Foreground-service-backed timer** that survives backgrounding, screen lock, app kill, reboot. DataStore-backed lock state — the locked dish and remaining time resume on relaunch.
+- **Audio + haptics** in the slice: the break-fast chime, lock-confirm haptic, milestone whisper haptics, deep break-fast haptic.
+
+**Explicitly cut from the slice** (these come in later slices):
+
+- Search
+- The full ~25–50 dish catalog
+- Multiple cuisines and the category-select screen
+- Full preset set (12/14/16/18/20/24h) and custom duration
+- "Find this near me" / Google Places
+- Google Play Billing / paywall
+- System notifications (chime + haptic only at zero)
+- Ambient room tone
+- Personalization (usuals, recents, history)
+- Settings screen
+- Account / sync
+- First-run health disclaimer
+- Dedicated accessibility audit (basic contrast and dynamic type are still respected; the audit comes when the screens settle)
+
+**Minimum agent set for this slice:** brand & identity designer (palette/type/metallic accent only), product designer (four screens), motion designer (breathing, grade progression, progress arc, break-fast reveal), food art director (one master image per dish + the grading curve), sound designer (chime + haptic vocabulary), copywriter (maître-d' phrasing for lock/milestones/break-fast), culinary curator (3–5 dishes), Android engineer (Compose + navigation + Coil grading transform), timer & state engineer (foreground service + AlarmManager + DataStore), QA/device tester (timer survival on the owner's device).
+
+Skipped for the slice: search engineer, personalization engineer, discovery/geo engineer, commerce engineer, accessibility specialist, legal/IP reviewer.
+
+**Scaffolding posture:** single-module Android app, Kotlin DSL Gradle, ViewModel + StateFlow per screen, no DI framework, no Room. Premium feel is hand-built; the slice doesn't need a library cabinet.
 
 ## The agent team
 
