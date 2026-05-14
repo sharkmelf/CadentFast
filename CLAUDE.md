@@ -69,14 +69,14 @@ The most-looked-at screen in the app. The dish is the protagonist, the timer is 
 
 **Type.** Time is set in the editorial serif, large enough to read at arm's length but quiet in weight — confident, not shouty. The sub-line is in the humanist sans, small, restrained.
 
-**Time formatting** follows restaurant cadence, not stopwatch. The minute count ticks down concretely all the way to one, so the phrase *"Any moment now"* still means **imminent** when it fires — it does not appear earlier in the fast:
+**Time formatting** keeps the number visible at all times. The countdown is textual, not stopwatch — "47 minutes" / "1 minute" / "45 seconds" / "1 second" — so the editorial voice holds, but a concrete number always tells the user how long is left:
 
 - More than an hour out: "13h 47m"
-- Within the hour: "47 minutes" … "5 minutes" … "1 minute" (the minute count ticks down concretely)
-- Within thirty seconds: "Any moment now"
+- Within the hour: "47 minutes" … "5 minutes" … "1 minute"
+- Within the last minute: "59 seconds" … "1 second"
 - At zero: "Now."
 
-An earlier draft used a five-minute *"Any moment now"* window. On hardware, that window was too wide — the phrase lost its meaning when it sustained across several minutes. Narrowing it to the final thirty seconds restores its weight, and the textual minute countdown stays maître-d', not stopwatch.
+Earlier drafts replaced the number with the phrase *"Any moment now"* in the final stretch. On hardware the substitution made the timer feel ambiguous — users couldn't tell whether the meal was thirty seconds out or three minutes out, and the phrase lost its meaning sustained across multiple minutes. The number stays. The maître-d' voice still lives in the sub-line below the timer ("Almost ready.", "The kitchen is plating.") and in the break-fast notification copy.
 
 Offer an alternate clock-time display as a setting ("Your table at 7:12 PM"). Some users anchor better to a time of arrival than a duration.
 
