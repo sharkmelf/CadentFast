@@ -8,7 +8,7 @@ This is a curated tasting menu, not a database. Every entry is a real, traceable
 
 Applied as filter chips. A dish may carry zero, one, two, or three of these tags. Definitions are deliberately tight so the chip filtering is unambiguous.
 
-- **Mediterranean** — olive-oil-forward, fish-and-vegetable-heavy, grain-and-legume-inclusive. Most Greek and Armenian dishes qualify. A handful of herb-forward Vietnamese and Indian dishes qualify. Few Japanese / Korean dishes qualify.
+- **Mediterranean** — olive-oil-forward, fish-and-vegetable-heavy, grain-and-legume-inclusive. Lebanese is the densest single-cuisine cluster (almost every dish qualifies); most Greek and Armenian dishes also qualify; a handful of Indian dishes qualify (tandoori prawns, anything olive-oil-forward). Few Japanese / Korean dishes qualify.
 - **Vegetarian** — no meat, no fish, no shellfish. May contain dairy and eggs. Applied rigorously — "vegetarian-adaptable" does not count.
 - **Protein-forward** — approximately *<15g net carbs per single serving*, protein-heavy. The label the keto-IF crowd recognizes; the maître-d' phrasing avoids "keto." Tandoori meats, sashimi, grilled wagyu, grilled kebabs without bread, Greek lamb chops with veg all qualify. Anything served over rice, noodles, lavash, or bread does not (unless the carb is explicitly removable in the dish name).
 
@@ -42,19 +42,19 @@ Applied as filter chips. A dish may carry zero, one, two, or three of these tags
 | Samgyeopsal (grilled pork belly, ssam lettuce) | 180g | 720 | Protein-forward |
 | Live-flame Wagyu Chadolbaegi (brisket, sesame oil dip) | 150g | 540 | Protein-forward |
 
-### Vietnamese
+### Lebanese
 
 | Dish | Portion | kcal | Tags |
 |---|---|---|---|
-| Phở Bò (beef noodle soup) | 1 bowl, ~600g | 480 | — |
-| Bún Bò Huế (spicy beef-and-lemongrass noodle soup) | 1 bowl, ~600g | 540 | — |
-| Cháo Gà (chicken rice porridge, ginger, scallion) | 1 bowl, ~450g | 360 | — |
-| Bún Chả (grilled pork patties, vermicelli, herbs, nuoc cham) | 1 plate, ~500g | 620 | Mediterranean |
-| Bánh Mì Thịt Nướng (grilled pork baguette) | 1 sandwich, ~280g | 540 | — |
-| Cơm Tấm Sườn (broken rice, grilled pork chop) | 1 plate, ~500g | 720 | — |
-| Chả Cá Lã Vọng (turmeric-dill fish, herbs, no noodle) | 200g fish + herbs | 420 | Mediterranean, Protein-forward |
-| Bò Lá Lốt (beef in wild-betel leaf, grilled) | 180g | 380 | Mediterranean, Protein-forward |
-| Cá Kho Tộ (caramelized clay-pot catfish) | 200g + sauce | 460 | — |
+| Hummus bil Tahini (chickpea + tahini + olive oil + paprika, served with cucumber) | 200g | 320 | Vegetarian, Mediterranean |
+| Baba Ganoush (smoky charred eggplant + tahini + lemon) | 180g | 240 | Vegetarian, Mediterranean |
+| Mujadara (lentils + rice + caramelized onions) | 320g | 420 | Vegetarian, Mediterranean |
+| Fattoush (sumac-dressed salad with tomato, cucumber, mint, fried pita) | 280g | 320 | Vegetarian, Mediterranean |
+| Warak Enab (vegetarian grape leaves stuffed with rice, herbs, lemon — 6 pieces) | 200g | 280 | Vegetarian, Mediterranean |
+| Shish Tawook (yogurt-marinated grilled chicken skewers, no pita) | 220g | 420 | Mediterranean, Protein-forward |
+| Lamb Kafta Skewers (charcoal-grilled, with tomato and parsley, no pita) | 220g | 520 | Mediterranean, Protein-forward |
+| Kibbeh Nayyeh (Lebanese raw beef tartare, bulgur, mint, olive oil) | 150g | 280 | Mediterranean, Protein-forward |
+| Mashawi Mishakal (mixed grill platter — lamb, chicken, kafta in single portions) | 280g | 620 | Mediterranean, Protein-forward |
 
 ### Indian
 
@@ -109,20 +109,17 @@ The food art director should commission these dishes via a small dedicated photo
 
 1. **Tamago Kake Gohan** — Japanese — raw egg + rice; the composition is iconic but AI mangles the raw yolk's translucency
 2. **Tonkotsu Ramen** — Japanese — broth + noodles + chopsticks is the canonical AI failure category
-3. **Phở Bò** — Vietnamese — same as above; the herb tangle and broth surface defeat AI consistently
-4. **Bún Bò Huế** — Vietnamese — same as above; spice slick and noodle texture both rendered badly at scale
-5. **Bún Chả** — Vietnamese — multi-component plate (grilled pork + vermicelli + herbs + dipping sauce); too many fail points
-6. **Cháo Gà** — Vietnamese — pale rice porridge; white-on-white challenge
-7. **Masala Dosa** — Indian — folded crepe with potato filling visible; AI cannot render the dosa edge texture or the filling correctly
+3. **Hummus bil Tahini** — Lebanese — creamy off-white dip with tahini swirl and oil pool; low-texture-contrast composition AI consistently flattens
+4. **Masala Dosa** — Indian — folded crepe with potato filling visible; AI cannot render the dosa edge texture or the filling correctly
 
-Seven dishes. Manageable as a single photography mini-shoot — much cheaper than the eventual full-catalog photography project deferred to Phase 2+.
+Four dishes. Manageable as a single photography mini-shoot — much cheaper than the eventual full-catalog photography project deferred to Phase 2+. (The original seven included four Vietnamese broth-noodle dishes; with Vietnamese struck from v1, the commission load drops correspondingly.)
 
 ## Reliable AI wins
 
 For context: the food art director can expect AI to render these well at scale. Grading + reject-gate work as designed; no commission needed in v1:
 
 - Grilled proteins on stone or charcoal — galbi, khorovats, paidakia, tandoori lamb chops, seekh kebab, ishiyaki wagyu, samgyeopsal, A5 ribeye, octopus sti schara, souvlaki kalamaki
-- Single-hero compositions on dark surfaces — toro aburi nigiri, chirashi, yukhoe, bo la lot, tandoori prawns
+- Single-hero compositions on dark surfaces — toro aburi nigiri, chirashi, yukhoe, kibbeh nayyeh, tandoori prawns
 - High-contrast tomato-and-feta plates — strapatsada, horiatiki, psari plaki
 - Single-bowl plated dishes with strong protein presence — galbitang, seolleongtang, butter chicken, rogan josh
 
@@ -130,8 +127,10 @@ The dark-AYCE-lit-from-below aesthetic is precisely what AI image models render 
 
 ## Honest tradeoffs
 
-- **Mediterranean register clusters in Greek + Armenian** with a handful of herb-forward Vietnamese entries — predictable but real. A user filtering by Mediterranean gets a strong, distinctive subset of the catalog.
-- **Vegetarian is structurally thin in Korean BBQ and Armenian.** Both cuisines are meat-centered; padding the count with token vegetarian dishes was rejected. Indian and Greek carry Vegetarian almost alone.
-- **Protein-forward is broadest** — every cuisine has dishes that qualify. Tag will be heavily used.
-- **Vietnamese is over-weighted in commission-shortlist** (four of seven). Expect Vietnamese imagery costs to be higher than other cuisines in v1.
-- **Japanese fine-dining breakfast is genuinely domestic.** TKG and tamagoyaki are real and authentic, but visually quieter than the AYCE-room aesthetic. The food art director should grade them warmer than they appear in a Tokyo kitchen — not falsifying the dishes, just lighting them for the app's room.
+- **Mediterranean register is now dense.** Lebanese is the single densest Mediterranean cluster (almost every dish qualifies); Greek and Armenian add substantial coverage. A user filtering by Mediterranean gets a rich, distinctive subset of the catalog — easily the strongest dietary filter in v1.
+- **Vegetarian register is now substantial.** Lebanese contributes five vegetarian heroes (hummus, baba ganoush, mujadara, fattoush, warak enab) on top of Indian and Greek's existing coverage. The vegetarian-foodie user has real depth across three cuisines in v1, vs. essentially two before.
+- **Vegetarian is still structurally thin in Korean BBQ and Armenian.** Both cuisines are meat-centered; padding the count with token vegetarian dishes was rejected. Lebanese, Indian, and Greek carry Vegetarian.
+- **Protein-forward is broadest** — every cuisine has dishes that qualify. Tag will be heavily used by the keto-IF crowd (surfaced via "Protein-forward" chip, not "Keto-friendly").
+- **Commission load is now lighter.** Original commission shortlist was seven dishes (four Vietnamese). With Vietnamese struck, the commission shortlist is four dishes (TKG, tonkotsu ramen, hummus, masala dosa) — a tighter, cheaper Phase 1 photography brief.
+- **Japanese fine-dining is genuinely domestic at the lighter end.** TKG and tamagoyaki are real and authentic, but visually quieter than the AYCE-room aesthetic. The food art director should grade them warmer than they appear in a Tokyo kitchen — not falsifying the dishes, just lighting them for the app's room.
+- **Vietnamese cut from v1.** A real cuisine the audience cares about, removed because of (a) commission concentration on broth-noodle imagery and (b) the cohort needing stronger vegetarian coverage. Add back in a later release when partner photography or commissioned shoots can cover the broth-noodle category at quality.

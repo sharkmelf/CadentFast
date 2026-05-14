@@ -14,12 +14,12 @@ Foodies. People who eat out often, eat out well, and look forward to the next me
 
 - High-end Japanese (wagyu AYCE, premium yakiniku, omakase counters, neighborhood sushi bars, specialty ramen)
 - Premium Korean BBQ
-- Vietnamese — pho counters, bún and grilled-protein houses, clay-pot specialists
+- Lebanese — mezze houses, grill-and-shawarma spots, the Levantine vegetarian register
 - Indian — tandoor-forward, kebab houses, regional biryani specialists
 - Armenian — khorovats, kebab and lavash houses, ceremonial breakfast traditions
 - Greek — souvlaki and grilled-fish spots, the village-salad register
 - Mediterranean diet generally — olive-oil-forward, fish-and-vegetable-heavy
-- Vegetarian where it's the cuisine's natural register (Indian, Greek, Armenian)
+- Vegetarian where it's the cuisine's natural register (Lebanese, Indian, Greek, Armenian)
 - Protein-forward / low-grain dining for users practicing low-carb + intermittent fasting
 
 They are not here to suppress cravings. They are here to **earn** them.
@@ -131,7 +131,7 @@ There is **one menu**. Food is food. No breakfast / lunch / dinner segmentation 
 
 **Filter chips** do all navigation:
 
-- **Cuisine chips:** Japanese · Korean BBQ · Vietnamese · Indian · Armenian · Greek
+- **Cuisine chips:** Japanese · Korean BBQ · Lebanese · Indian · Armenian · Greek
 - **Dietary register chips:** Mediterranean · Vegetarian · Protein-forward
 
 Filter chips are toggleable; multiple may be active at once (e.g., *Greek* + *Mediterranean* + *Protein-forward* narrows to grilled-fish-with-veg territory). The chip row is horizontally scrollable above the dish list.
@@ -289,7 +289,7 @@ Flat monthly subscription per location, tiered by dish AOV:
 | Tier | Example dishes | Price per location per month |
 |---|---|---|
 | Premium | A5 Ribeye, Ishiyaki Wagyu, Paidakia, Tandoori Lamb Chops | **$449** |
-| Standard | Bibimbap, Butter Chicken, Bún Chả, Souvlaki, Galbi | **$249** |
+| Standard | Bibimbap, Butter Chicken, Shish Tawook, Souvlaki, Galbi | **$249** |
 | Entry | Tamago Kake Gohan, Masala Dosa, Anda Bhurji, Greek Yogurt | **$149** |
 
 **Multi-dish bundle:** second dish at the same location **−40%**, third+ at **−55%**, cap at 4 dishes per location. **90-day repricing notice** in every contract (these numbers are first-instinct guesses; reprice after the first six months of real data). No annual prepay discount in v1 — we haven't earned retention yet.
@@ -345,18 +345,18 @@ Not a hedge against the restaurant model. A real product for users who want hist
 
 1. **Platform — Android-first, native (Kotlin + Jetpack Compose).** The owner is on Android and must be able to test on-device. Native gives the best image performance, smoothest premium motion, the strongest background-timer story (foreground service + AlarmManager + WorkManager), and the cleanest haptics/audio. iOS port is out of scope for v1; revisit after the loop is validated.
 2. **Catalog source — curated in-house.** Every dish entered by hand. The catalog is treated as an edited menu, not a database. Schema partitions entries by `cuisine` and tags entries with optional dietary registers (`mediterranean`, `vegetarian`, `protein_forward`).
-3. **Food photography — AI-generated as MVP placeholder, replaced over time.** AI imagery is the v1 MVP source — fast, cheap, controllable. The food art director runs a strict reject gate. The roadmap explicitly plans to replace AI imagery with higher-quality alternatives — licensed stock, commissioned shoots, or restaurant-partner photography — cuisine-by-cuisine and partner-by-partner as the catalog matures. Use an AI service with unambiguous commercial-use rights. Design the catalog schema so a dish can swap its imagery without losing identity, lock history, or personalization data. **Commission-from-day-one shortlist:** dishes the Curator identified as unreliable for AI rendering (white-on-white compositions, pale broths, multi-component noodle dishes with chopsticks) — see `CATALOG.md` for the specific seven.
+3. **Food photography — AI-generated as MVP placeholder, replaced over time.** AI imagery is the v1 MVP source — fast, cheap, controllable. The food art director runs a strict reject gate. The roadmap explicitly plans to replace AI imagery with higher-quality alternatives — licensed stock, commissioned shoots, or restaurant-partner photography — cuisine-by-cuisine and partner-by-partner as the catalog matures. Use an AI service with unambiguous commercial-use rights. Design the catalog schema so a dish can swap its imagery without losing identity, lock history, or personalization data. **Commission-from-day-one shortlist:** dishes the Curator identified as unreliable for AI rendering (low-texture-contrast dips, white-on-white compositions, raw-yolk translucency, folded-crepe edge detail) — see `CATALOG.md` for the specific four.
 4. **Default cadence — The Daily (16:8).** First-run uses the maître-d'-named rhythm. The user can switch to *The Long Lunch / The Apéritif / The Tasting / The Chef's Counter* later. Debug builds run a 4:2 dev rhythm for fast device iteration; release builds never expose it.
 5. **"Find this near me" — Phase 2, not v1.** Implies a places provider (default: Google Places, since Android-native). The v1 slice ships without it; the architectural seams are in place from day one so Phase 2 only adds the provider, not the plumbing.
 6. **Reservations — Phase 4, via OpenTable / Resy / Tock deep links to start.** Direct POS integration in Phase 5. v1 ships with no reservation surface at all.
 7. **Monetization — restaurant partnerships, not user payments.** Free install. No paywall on any user-facing feature. A premium user subscription may land later; v1 has none.
-8. **v1 cuisines — six.** Japanese · Korean BBQ · Vietnamese · Indian · Armenian · Greek. ~40–48 authentic dishes across the six cuisines. Each dish is real and traceable to its cuisine — no inventions, no constructed registers. See `CATALOG.md`.
+8. **v1 cuisines — six.** Japanese · Korean BBQ · Lebanese · Indian · Armenian · Greek. ~40–50 authentic dishes across the six cuisines. Each dish is real and traceable to its cuisine — no inventions, no constructed registers. See `CATALOG.md`. *Earlier draft included Vietnamese; it was struck because (a) the canonical Vietnamese dishes (pho, bún bò huế, bún chả) are AI imagery failure modes that would have concentrated the v1 commission budget in a single cuisine, and (b) Lebanese supplements Indian and Greek as a third strongly-vegetarian cuisine with rich Mediterranean overlap, which the cohort otherwise lacked.*
 9. **v1 dietary registers — three.** Mediterranean · Vegetarian · Protein-forward. Applied as cross-cutting tags, surfaced as filter chips, with smart-default pre-activation based on upcoming break-fast time-of-day.
 
 ## Open considerations
 
 - **AI imagery is the biggest brand risk.** A bad image undermines the entire premium feel more than any other defect. The food art director's reject gate is the hill to die on. Commission-from-day-one for the seven unreliable dishes; iterate the rest.
-- **Vietnamese broth-noodle photography.** Pho, bún bò huế, bún chả are canonical AI failure modes (fused noodles, warped chopsticks). Expect to commission these earlier than the catalog-wide roadmap suggests.
+- **Levantine mezze photography.** Hummus, baba ganoush, and similar creamy / dip-style plates are AI-tricky (low texture contrast, blown highlights on tahini swirl). Expect to commission the hummus hero shot at minimum; baba ganoush and mujadara may render acceptably depending on grade settings.
 - **Geographic density before partner rollout.** Phase 3 lives or dies on having enough partners per metro that branded-entry coverage feels non-sparse. Phase 2's generic discovery decouples the user launch from this — every metro is covered via places API regardless.
 - **Restaurant branding tension.** Partner content (photography, menu copy) must be ingested without diluting the app's premium minimalism. Rigorous partner content guidelines (Exhibit A above). Toast and Yelp visibly struggle with this; our defense is contract terms, not aesthetic preferences.
 - **No-show flexibility (Phase 4+).** Fasts are voluntary. If a user breaks fast early, any held reservation needs to gracefully cancel or shift without burning the restaurant. The maître-d' voice still applies — *"The table will be here tomorrow."* The booking system has to be operationally forgiving.
