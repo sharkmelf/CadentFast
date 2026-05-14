@@ -48,7 +48,7 @@ import com.cadent.cadentfast.ui.theme.ParchmentDim
 fun HeroTimerScreen(vm: HeroTimerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     when (val s = state) {
-        is HeroTimerState.Idle -> IdleHero(onBegin = vm::startDefault15Minutes)
+        is HeroTimerState.Idle -> IdleHero(onBegin = vm::startDefaultShortFast)
         is HeroTimerState.Running -> RunningHero(state = s, onEnd = vm::endFast)
         is HeroTimerState.Complete -> BreakFastHero(state = s, onAcknowledge = vm::endFast)
     }
@@ -78,7 +78,7 @@ private fun IdleHero(onBegin: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             TextButton(onClick = onBegin) {
                 Text(
-                    text = "BEGIN A 15-MINUTE FAST",
+                    text = "BEGIN A 3.5-MINUTE FAST",
                     style = MaterialTheme.typography.labelLarge,
                     color = Copper,
                 )

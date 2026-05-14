@@ -42,8 +42,10 @@ class HeroTimerViewModel(app: Application) : AndroidViewModel(app) {
         else HeroTimerState.Running(dish, session, now)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), HeroTimerState.Idle)
 
-    fun startDefault15Minutes() {
-        repo.startFast(dishId = Catalog.default.id, durationMs = 15 * 60_000L)
+    fun startDefaultShortFast() {
+        // 3 minutes 30 seconds. The iteration-speed preset for the slice;
+        // the 4h option in PR A is the only "real" fast in scope.
+        repo.startFast(dishId = Catalog.default.id, durationMs = 3 * 60_000L + 30_000L)
     }
 
     fun startFast(dishId: String, durationMs: Long) {

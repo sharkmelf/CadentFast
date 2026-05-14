@@ -182,7 +182,7 @@ Before scaffolding any other code, build the **thinnest end-to-end loop** that p
 **In scope:**
 
 - **Lock screen** — a hardcoded list of 3–5 Japanese wagyu dishes. Tap one to lock it as the reward.
-- **Duration screen** — exactly three presets: **15m / 1h / 4h**. The short windows are for iteration; the 4h option is the only "real" fast in the slice.
+- **Duration screen** — exactly three presets: **3.5m / 1h / 4h**. The short window is for iteration; the 4h option is the only "real" fast in the slice. (Earlier draft of this section used 15m as the iteration preset. On hardware, three and a half minutes makes every device-test cycle 4× faster, which matters because the slice is in active polish.)
 - **Hero timer screen** — full-bleed dish on top, quiet typographic timer block below, the dynamic-grading progression ("the dish ripens"), the breathing motion, the metallic progress arc, the maître-d' sub-line softening with proximity.
 - **Break-fast screen** — slow 2–3s reveal at zero, single signature chime, deep haptic, one *"Begin."* button that closes back to home.
 - **Foreground-service-backed timer** that survives backgrounding, screen lock, app kill, reboot. DataStore-backed lock state — the locked dish and remaining time resume on relaunch.
