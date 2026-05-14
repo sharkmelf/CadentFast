@@ -1,0 +1,61 @@
+name: Android build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Android project
+        id: detect
+        run: |
+          if [ -f gradlew ] && [ -f settings.gradle.kts -o -f settings.gradle ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No Android project on this ref (no gradlew). Skipping build."
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.detect.outputs.present == 'true'
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+        if: steps.detect.outputs.present == 'true'
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.detect.outputs.present == 'true'
+
+      - name: Make gradlew executable
+        if: steps.detect.outputs.present == 'true'
+        run: chmod +x ./gradlew
+
+      - name: Assemble debug
+        if: steps.detect.outputs.present == 'true'
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Lint
+        if: steps.detect.outputs.present == 'true'
+        run: ./gradlew lint --no-daemon --stacktrace
+
+      - name: Upload lint report
+        if: steps.detect.outputs.present == 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: '**/build/reports/lint-results-*.html'
+          if-no-files-found: ignore
