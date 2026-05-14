@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CadentFast</string>
-    <string name="timer_channel_name">Your reservation</string>
-    <string name="timer_channel_description">A quiet, single notification while a fast is in progress.</string>
-    <string name="timer_notification_title">Your reservation is set.</string>
-    <string name="timer_notification_template">%1$s · %2$s to your table</string>
+
+    <!-- Ongoing foreground-service notification (LOW importance, silent) -->
+    <string name="ongoing_channel_name">Your rhythm</string>
+    <string name="ongoing_channel_description">A quiet, single notification while your rhythm is running.</string>
+    <string name="ongoing_title">Your reservation is set.</string>
+    <string name="ongoing_fast_template">%1$s until your table</string>
+    <string name="ongoing_feast_template">%1$s of feast remaining</string>
+
+    <!-- Break-fast notification (HIGH importance, sound + vibration) -->
+    <string name="break_fast_channel_name">The kitchen is ready</string>
+    <string name="break_fast_channel_description">A single notification, with sound, the moment your fast ends.</string>
     <string name="break_fast_notification_title">The kitchen is ready.</string>
     <string name="break_fast_notification_body">Your %1$s is plated.</string>
-    <string name="break_fast_channel_name">The kitchen is ready</string>
-    <string name="break_fast_channel_description">A single notification, with sound, the moment a fast ends.</string>
+
+    <!-- Next-fast notification (DEFAULT importance) -->
+    <string name="next_fast_channel_name">The next table</string>
+    <string name="next_fast_channel_description">A quiet reminder when the feast window closes and the next fast begins.</string>
+    <string name="next_fast_notification_title">The next table is set.</string>
+    <string name="next_fast_notification_body_with_dish">Your fast has begun. Tonight\'s table: %1$s.</string>
+    <string name="next_fast_notification_body_without_dish">Your fast has begun.</string>
 </resources>
