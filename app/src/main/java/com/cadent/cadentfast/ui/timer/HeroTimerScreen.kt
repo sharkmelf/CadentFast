@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,11 +63,17 @@ private fun IdleHero(onBegin: () -> Unit) {
             .systemBarsPadding(),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             Text(
                 text = "A table for one is waiting.",
                 style = MaterialTheme.typography.headlineLarge,
                 color = Parchment,
+                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(24.dp))
             TextButton(onClick = onBegin) {
@@ -109,17 +116,26 @@ private fun RunningHero(state: HeroTimerState.Running, onEnd: () -> Unit) {
                 text = state.dish.name,
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 22.sp),
                 color = Parchment,
+                textAlign = TextAlign.Center,
             )
             Text(
                 text = formatRemaining(state.session.remainingMs(state.nowMs)),
-                style = MaterialTheme.typography.displayMedium,
+                // Quiet enough to share the page with the dish, large enough to
+                // read at arm's length, small enough that "Any moment now" sits
+                // on a single line on a typical phone.
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontSize = 44.sp,
+                    lineHeight = 50.sp,
+                ),
                 color = Parchment,
                 fontWeight = FontWeight.Light,
+                textAlign = TextAlign.Center,
             )
             Text(
                 text = maitreDhintFor(progress),
                 style = MaterialTheme.typography.bodyMedium,
                 color = ParchmentDim,
+                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(12.dp))
             ProgressSweep(
@@ -163,8 +179,14 @@ private fun BreakFastHero(state: HeroTimerState.Complete, onAcknowledge: () -> U
         ) {
             Text(
                 text = "Your ${state.dish.name} is plated.",
-                style = MaterialTheme.typography.headlineLarge,
+                // Smaller than the default headlineLarge so long dish names
+                // wrap to two dignified lines instead of three orphaned ones.
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 26.sp,
+                    lineHeight = 32.sp,
+                ),
                 color = Parchment,
+                textAlign = TextAlign.Center,
             )
             TextButton(onClick = onAcknowledge) {
                 Text(
@@ -240,15 +262,16 @@ private fun ProgressSweep(progress: Float, modifier: Modifier = Modifier) {
 }
 
 private fun formatRemaining(remainingMs: Long): String {
+    // Restaurant cadence per CLAUDE.md, not stopwatch. The clock-style "MM:SS"
+    // intentionally does not appear at any duration -- it reads as a stopwatch,
+    // which is exactly the wrong feeling for the last minutes before the table.
     if (remainingMs <= 0) return "Now."
     val totalSeconds = (remainingMs + 999) / 1000
     val hours = totalSeconds / 3600
     val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
     return when {
         hours > 0 -> "${hours}h ${minutes}m"
         minutes >= 5 -> "$minutes minutes"
-        minutes >= 1 -> "$minutes:${seconds.toString().padStart(2, '0')}"
         else -> "Any moment now"
     }
 }

@@ -7,4 +7,6 @@
     <string name="timer_notification_template">%1$s · %2$s to your table</string>
     <string name="break_fast_notification_title">The kitchen is ready.</string>
     <string name="break_fast_notification_body">Your %1$s is plated.</string>
+    <string name="break_fast_channel_name">The kitchen is ready</string>
+    <string name="break_fast_channel_description">A single notification, with sound, the moment a fast ends.</string>
 </resources>

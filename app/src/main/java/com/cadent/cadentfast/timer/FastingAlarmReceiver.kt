@@ -34,17 +34,22 @@ class FastingAlarmReceiver : BroadcastReceiver() {
             Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
         )
-        val notification = NotificationCompat.Builder(context, FastingTimerService.NOTIF_CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, BREAK_FAST_CHANNEL_ID)
             .setContentTitle(context.getString(R.string.break_fast_notification_title))
             .setContentText(context.getString(R.string.break_fast_notification_body, dishName))
             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
             .setAutoCancel(true)
             .setContentIntent(openIntent)
             .build()
         nm.notify(BREAK_FAST_NOTIF_ID, notification)
     }
 
-    private companion object {
+    companion object {
+        const val BREAK_FAST_CHANNEL_ID = "fasting_break_fast"
         const val BREAK_FAST_NOTIF_ID = 2
     }
 }
