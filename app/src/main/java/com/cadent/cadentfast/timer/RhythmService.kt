@@ -20,21 +20,27 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * Keeps the app's process resident while a fast is in progress and shows a
- * quiet ongoing notification with the time remaining. The actual countdown
- * is computed from the persisted FastSession; this service is the keep-alive,
- * not the source of truth.
+ * Always-on foreground service that keeps the app's process alive for the full
+ * rhythm lifetime. Carries an ongoing low-importance notification that displays
+ * the current phase remaining ("3h 12m until your table" during fast, "2h 41m
+ * of feast remaining" during feast). The break-fast moment lives on a separate
+ * high-importance notification fired by [RhythmAlarmReceiver].
+ *
+ * The service also periodically reconciles with [RhythmRepository.reconcile] so
+ * missed alarms get caught on the next tick.
+ *
+ * PR D' may convert this to a windowed FGS posture per the spec (active in the
+ * final hour of each phase + on-demand) to reduce battery cost. For PR A',
+ * always-on is the simpler correct shape.
  */
-class FastingTimerService : Service() {
+class RhythmService : Service() {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var tickJob: Job? = null
-    private var initialDishName: String = "Your reward"
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        initialDishName = intent?.getStringExtra(EXTRA_DISH_NAME) ?: initialDishName
-        startForegroundSafely(buildNotification(initialDishName, remainingLabel = "starting"))
-        observeSession()
+        startForegroundSafely(buildNotification("starting"))
+        observe()
         return START_STICKY
     }
 
@@ -49,44 +55,51 @@ class FastingTimerService : Service() {
         }
     }
 
-    private fun observeSession() {
+    private fun observe() {
         if (tickJob?.isActive == true) return
-        val repo = (application as CadentFastApp).timerRepo
+        val repo = (application as CadentFastApp).rhythmRepo
         tickJob = scope.launch {
-            repo.session.collectLatest { session ->
-                if (session == null) {
+            repo.rhythm.collectLatest { rhythm ->
+                if (rhythm == null || !rhythm.isActive()) {
                     stopSelf()
                     return@collectLatest
                 }
                 while (true) {
                     val now = System.currentTimeMillis()
-                    if (session.isComplete(now)) {
-                        stopSelf()
-                        break
-                    }
-                    val remainingLabel = formatRemainingForNotification(session.remainingMs(now))
-                    updateNotification(session.dishId, remainingLabel)
+                    val label = phaseSubLine(rhythm, now)
+                    updateNotification(label)
+                    // Reconcile cheaply each tick. Missed-boundary recovery is
+                    // centralized in the repo; this just calls into it.
+                    repo.reconcile()
                     kotlinx.coroutines.delay(30_000L)
                 }
             }
         }
     }
 
-    private fun updateNotification(dishId: String, remainingLabel: String) {
-        val name = com.cadent.cadentfast.catalog.Catalog.byId(dishId)?.name ?: initialDishName
-        val nm = getSystemService(android.app.NotificationManager::class.java) ?: return
-        nm.notify(NOTIF_ID, buildNotification(name, remainingLabel))
+    private fun phaseSubLine(rhythm: Rhythm, now: Long): String {
+        val remaining = rhythm.remainingInPhaseMs(now)
+        val text = formatRemainingForNotification(remaining)
+        return when (rhythm.phase(now)) {
+            Phase.Fast -> getString(R.string.ongoing_fast_template, text)
+            Phase.Feast -> getString(R.string.ongoing_feast_template, text)
+        }
     }
 
-    private fun buildNotification(dishName: String, remainingLabel: String): Notification {
+    private fun updateNotification(remainingLabel: String) {
+        val nm = getSystemService(android.app.NotificationManager::class.java) ?: return
+        nm.notify(NOTIF_ID, buildNotification(remainingLabel))
+    }
+
+    private fun buildNotification(remainingLabel: String): Notification {
         val openIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         return NotificationCompat.Builder(this, NOTIF_CHANNEL_ID)
-            .setContentTitle(getString(R.string.timer_notification_title))
-            .setContentText(getString(R.string.timer_notification_template, dishName, remainingLabel))
+            .setContentTitle(getString(R.string.ongoing_title))
+            .setContentText(remainingLabel)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .setSilent(true)
@@ -105,25 +118,23 @@ class FastingTimerService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     companion object {
-        const val NOTIF_CHANNEL_ID = "fasting_timer"
+        const val NOTIF_CHANNEL_ID = "rhythm_ongoing"
         const val NOTIF_ID = 1
-        const val EXTRA_DISH_NAME = "dish_name"
 
-        fun start(context: Context, dishName: String) {
-            val intent = Intent(context, FastingTimerService::class.java)
-                .putExtra(EXTRA_DISH_NAME, dishName)
-            context.startForegroundService(intent)
+        fun start(context: Context) {
+            context.startForegroundService(Intent(context, RhythmService::class.java))
         }
 
         fun stop(context: Context) {
-            context.stopService(Intent(context, FastingTimerService::class.java))
+            context.stopService(Intent(context, RhythmService::class.java))
         }
     }
 }
 
 private fun formatRemainingForNotification(remainingMs: Long): String {
-    val totalMinutes = (remainingMs + 59_999) / 60_000
-    if (totalMinutes <= 0) return "any moment now"
+    val totalSeconds = (remainingMs + 999) / 1000
+    if (totalSeconds < 60) return "${totalSeconds}s"
+    val totalMinutes = totalSeconds / 60
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     return when {

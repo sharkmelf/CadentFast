@@ -32,16 +32,16 @@
         </activity>
 
         <service
-            android:name=".timer.FastingTimerService"
+            android:name=".timer.RhythmService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="anticipation_timer_for_a_one_shot_fasting_session" />
+                android:value="anticipation_timer_for_a_daily_fasting_rhythm" />
         </service>
 
         <receiver
-            android:name=".timer.FastingAlarmReceiver"
+            android:name=".timer.RhythmAlarmReceiver"
             android:exported="false" />
 
     </application>

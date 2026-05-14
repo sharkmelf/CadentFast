@@ -1,22 +1,15 @@
 package com.cadent.cadentfast.ui.timer
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,12 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,7 +25,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cadent.cadentfast.catalog.Dish
-import com.cadent.cadentfast.timer.FastSession
+import com.cadent.cadentfast.timer.Phase
+import com.cadent.cadentfast.timer.Rhythm
 import com.cadent.cadentfast.ui.theme.Charcoal
 import com.cadent.cadentfast.ui.theme.Copper
 import com.cadent.cadentfast.ui.theme.Parchment
@@ -48,14 +36,37 @@ import com.cadent.cadentfast.ui.theme.ParchmentDim
 fun HeroTimerScreen(vm: HeroTimerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     when (val s = state) {
-        is HeroTimerState.Idle -> IdleHero(onBegin = vm::startDefaultShortFast)
-        is HeroTimerState.Running -> RunningHero(state = s, onEnd = vm::endFast)
-        is HeroTimerState.Complete -> BreakFastHero(state = s, onAcknowledge = vm::endFast)
+        is HeroTimerState.Welcome ->
+            WelcomeHero(onBegin = vm::beginRhythmDevDefault)
+
+        is HeroTimerState.FastRunning ->
+            RhythmHero(
+                rhythm = s.rhythm,
+                dish = s.dish,
+                nowMs = s.nowMs,
+                phase = Phase.Fast,
+                onEnd = vm::endRhythm,
+            )
+
+        is HeroTimerState.FeastRunning ->
+            RhythmHero(
+                rhythm = s.rhythm,
+                dish = s.dish,
+                nowMs = s.nowMs,
+                phase = Phase.Feast,
+                onEnd = vm::endRhythm,
+            )
+
+        is HeroTimerState.BreakFastReveal ->
+            BreakFastReveal(
+                dish = s.dish,
+                onAcknowledge = vm::acknowledgeBreakFastReveal,
+            )
     }
 }
 
 @Composable
-private fun IdleHero(onBegin: () -> Unit) {
+private fun WelcomeHero(onBegin: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -78,7 +89,7 @@ private fun IdleHero(onBegin: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             TextButton(onClick = onBegin) {
                 Text(
-                    text = "BEGIN A 3.5-MINUTE FAST",
+                    text = "SHOW ME TO MY TABLE",
                     style = MaterialTheme.typography.labelLarge,
                     color = Copper,
                 )
@@ -88,41 +99,58 @@ private fun IdleHero(onBegin: () -> Unit) {
 }
 
 @Composable
-private fun RunningHero(state: HeroTimerState.Running, onEnd: () -> Unit) {
-    val progress = state.session.progress(state.nowMs)
+private fun RhythmHero(
+    rhythm: Rhythm,
+    dish: Dish,
+    nowMs: Long,
+    phase: Phase,
+    onEnd: () -> Unit,
+) {
+    val phaseProgress = rhythm.phaseProgress(nowMs)
+    val ringPosition = rhythm.ringPosition(nowMs)
+    val remainingMs = rhythm.remainingInPhaseMs(nowMs)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Charcoal)
             .systemBarsPadding(),
     ) {
-        DishHero(
-            dish = state.dish,
-            progress = progress,
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.62f),
-        )
-
         Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(horizontal = 32.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         ) {
+            Box(
+                modifier = Modifier.size(320.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                // Dish hero inside the ring. Ripens through the fast; in the
+                // feast register, hits full grade and dims by ~30%.
+                DishHero(
+                    dish = dish,
+                    progress = if (phase == Phase.Fast) phaseProgress else 1f,
+                    modifier = Modifier.size(240.dp),
+                    dimmed = phase == Phase.Feast,
+                )
+                RhythmRing(
+                    ringPosition = ringPosition,
+                    cadence = rhythm.cadence,
+                    size = 320.dp,
+                )
+            }
+
             Text(
-                text = state.dish.name,
+                text = dish.name,
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 22.sp),
                 color = Parchment,
                 textAlign = TextAlign.Center,
             )
+
             Text(
-                text = formatRemaining(state.session.remainingMs(state.nowMs)),
-                // Quiet enough to share the page with the dish, large enough to
-                // read at arm's length, small enough that "Any moment now" sits
-                // on a single line on a typical phone.
+                text = formatRemaining(remainingMs),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontSize = 44.sp,
                     lineHeight = 50.sp,
@@ -131,19 +159,14 @@ private fun RunningHero(state: HeroTimerState.Running, onEnd: () -> Unit) {
                 fontWeight = FontWeight.Light,
                 textAlign = TextAlign.Center,
             )
+
             Text(
-                text = maitreDhintFor(progress),
+                text = subLineFor(phase, phaseProgress),
                 style = MaterialTheme.typography.bodyMedium,
                 color = ParchmentDim,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(12.dp))
-            ProgressSweep(
-                progress = progress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp),
-            )
+
             Spacer(Modifier.height(8.dp))
             TextButton(onClick = onEnd) {
                 Text(
@@ -157,7 +180,10 @@ private fun RunningHero(state: HeroTimerState.Running, onEnd: () -> Unit) {
 }
 
 @Composable
-private fun BreakFastHero(state: HeroTimerState.Complete, onAcknowledge: () -> Unit) {
+private fun BreakFastReveal(
+    dish: Dish,
+    onAcknowledge: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -165,7 +191,7 @@ private fun BreakFastHero(state: HeroTimerState.Complete, onAcknowledge: () -> U
             .systemBarsPadding(),
     ) {
         DishHero(
-            dish = state.dish,
+            dish = dish,
             progress = 1f,
             modifier = Modifier.fillMaxSize(),
         )
@@ -178,9 +204,7 @@ private fun BreakFastHero(state: HeroTimerState.Complete, onAcknowledge: () -> U
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Text(
-                text = "Your ${state.dish.name} is plated.",
-                // Smaller than the default headlineLarge so long dish names
-                // wrap to two dignified lines instead of three orphaned ones.
+                text = "Your ${dish.name} is plated.",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 26.sp,
                     lineHeight = 32.sp,
@@ -190,7 +214,7 @@ private fun BreakFastHero(state: HeroTimerState.Complete, onAcknowledge: () -> U
             )
             TextButton(onClick = onAcknowledge) {
                 Text(
-                    text = "BEGIN",
+                    text = "YOUR TABLE",
                     style = MaterialTheme.typography.labelLarge,
                     color = Copper,
                 )
@@ -199,72 +223,12 @@ private fun BreakFastHero(state: HeroTimerState.Complete, onAcknowledge: () -> U
     }
 }
 
-@Composable
-private fun DishHero(
-    dish: Dish,
-    progress: Float,
-    modifier: Modifier = Modifier,
-) {
-    // Ripening: interpolate the placeholder's center hue from cool to warm as the fast advances.
-    val ripening by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = 1_200, easing = LinearEasing),
-        label = "ripening",
-    )
-    val center = lerp(dish.coolBackdrop, dish.warmBackdrop, ripening.coerceIn(0f, 1f))
-    val rim = lerp(Charcoal, dish.coolBackdrop, 0.6f)
-
-    // Breathing: a slow, 1.5% scale oscillation. The dish is alive but never animated-looking.
-    val infinite = rememberInfiniteTransition(label = "breath")
-    val breath by infinite.animateFloat(
-        initialValue = 0.992f,
-        targetValue = 1.008f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 6_500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "breath_scale",
-    )
-
-    Box(
-        modifier = modifier.scale(breath).background(
-            Brush.radialGradient(
-                colors = listOf(center, rim, Charcoal),
-            )
-        ),
-    )
-}
-
-@Composable
-private fun ProgressSweep(progress: Float, modifier: Modifier = Modifier) {
-    val animated by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 900, easing = LinearEasing),
-        label = "sweep",
-    )
-    androidx.compose.foundation.Canvas(modifier = modifier) {
-        val y = size.height / 2f
-        drawLine(
-            color = Color(0x33B87333),
-            start = Offset(0f, y),
-            end = Offset(size.width, y),
-            strokeWidth = size.height,
-            cap = StrokeCap.Round,
-        )
-        drawLine(
-            color = Copper,
-            start = Offset(0f, y),
-            end = Offset(size.width * animated, y),
-            strokeWidth = size.height,
-            cap = StrokeCap.Round,
-        )
-    }
-}
-
+/**
+ * The number ticks down concretely all the way -- "X minutes" while there are
+ * minutes left, "X seconds" inside the final minute. The user always sees the
+ * time remaining; no ambient phrase ever replaces the number.
+ */
 private fun formatRemaining(remainingMs: Long): String {
-    // The number ticks down concretely all the way -- "X minutes" while there
-    // are minutes left, "X seconds" inside the final minute. The user always
-    // sees the time remaining; no ambient phrase ever replaces the number.
     if (remainingMs <= 0) return "Now."
     val totalSeconds = (remainingMs + 999) / 1000
     if (totalSeconds < 60) {
@@ -279,11 +243,19 @@ private fun formatRemaining(remainingMs: Long): String {
     }
 }
 
-private fun maitreDhintFor(progress: Float): String = when {
-    progress < 0.1f -> "Your table is being prepared."
-    progress < 0.45f -> "The wine has been opened."
-    progress < 0.55f -> "Halfway to the table."
-    progress < 0.85f -> "The kitchen is plating."
-    progress < 0.97f -> "Almost ready."
-    else -> "Any moment now."
+/** Maitre-d' sub-line; softens through the fast / lingers through the feast. */
+private fun subLineFor(phase: Phase, progress: Float): String = when (phase) {
+    Phase.Fast -> when {
+        progress < 0.10f -> "Your table is being prepared."
+        progress < 0.45f -> "The wine has been opened."
+        progress < 0.55f -> "Halfway to the table."
+        progress < 0.85f -> "The kitchen is plating."
+        progress < 0.97f -> "Almost ready."
+        else -> "The grill is lit."
+    }
+    Phase.Feast -> when {
+        progress < 0.30f -> "Linger."
+        progress < 0.70f -> "The kitchen is yours."
+        else -> "The next table opens soon."
+    }
 }
