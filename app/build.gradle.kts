@@ -40,6 +40,9 @@ android {
 
     buildFeatures {
         compose = true
+        // Generate BuildConfig so Cadence can gate the dev-cadence rhythm on
+        // BuildConfig.DEBUG. AGP 8.0+ defaults this to false; we opt back in.
+        buildConfig = true
     }
 
     packaging {
