@@ -262,17 +262,19 @@ private fun ProgressSweep(progress: Float, modifier: Modifier = Modifier) {
 }
 
 private fun formatRemaining(remainingMs: Long): String {
-    // Restaurant cadence per CLAUDE.md, not stopwatch. The clock-style "MM:SS"
-    // intentionally does not appear at any duration -- it reads as a stopwatch,
-    // which is exactly the wrong feeling for the last minutes before the table.
+    // Restaurant cadence per CLAUDE.md, not stopwatch. The minute count ticks
+    // down concretely so "Any moment now" still means imminent when it fires --
+    // it only appears in the last 30 seconds.
     if (remainingMs <= 0) return "Now."
     val totalSeconds = (remainingMs + 999) / 1000
+    if (totalSeconds <= 30) return "Any moment now"
     val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
+    val ceilingMinutes = (totalSeconds + 59) / 60
+    val withinHourMinutes = (totalSeconds % 3600) / 60
     return when {
-        hours > 0 -> "${hours}h ${minutes}m"
-        minutes >= 5 -> "$minutes minutes"
-        else -> "Any moment now"
+        hours > 0 -> "${hours}h ${withinHourMinutes}m"
+        ceilingMinutes == 1L -> "1 minute"
+        else -> "$ceilingMinutes minutes"
     }
 }
 
