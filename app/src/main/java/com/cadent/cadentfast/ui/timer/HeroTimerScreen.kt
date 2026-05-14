@@ -1,6 +1,7 @@
 package com.cadent.cadentfast.ui.timer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +38,22 @@ fun HeroTimerScreen(vm: HeroTimerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     when (val s = state) {
         is HeroTimerState.Welcome ->
-            WelcomeHero(onBegin = vm::beginRhythmDevDefault)
+            WelcomeHero(onBegin = vm::onShowMeToMyTable)
+
+        is HeroTimerState.ChoosingDish ->
+            DishSelectionScreen(
+                onDishChosen = vm::onDishChosen,
+                onBack = vm::onBackFromPicker,
+                initialDietaryFilters = s.initialDietaryFilters,
+                headerTitle = when (s.context) {
+                    ChooseContext.BeginRhythm -> "Tonight's table"
+                    ChooseContext.SwapMidRhythm -> "Reconsider"
+                },
+                headerSubtitle = when (s.context) {
+                    ChooseContext.BeginRhythm -> "What are you fasting toward?"
+                    ChooseContext.SwapMidRhythm -> "Appetites change."
+                },
+            )
 
         is HeroTimerState.FastRunning ->
             RhythmHero(
@@ -45,6 +61,7 @@ fun HeroTimerScreen(vm: HeroTimerViewModel = viewModel()) {
                 dish = s.dish,
                 nowMs = s.nowMs,
                 phase = Phase.Fast,
+                onReconsider = vm::onReconsider,
                 onEnd = vm::endRhythm,
             )
 
@@ -54,6 +71,7 @@ fun HeroTimerScreen(vm: HeroTimerViewModel = viewModel()) {
                 dish = s.dish,
                 nowMs = s.nowMs,
                 phase = Phase.Feast,
+                onReconsider = vm::onReconsider,
                 onEnd = vm::endRhythm,
             )
 
@@ -104,6 +122,7 @@ private fun RhythmHero(
     dish: Dish,
     nowMs: Long,
     phase: Phase,
+    onReconsider: () -> Unit,
     onEnd: () -> Unit,
 ) {
     val phaseProgress = rhythm.phaseProgress(nowMs)
@@ -127,8 +146,6 @@ private fun RhythmHero(
                 modifier = Modifier.size(320.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                // Dish hero inside the ring. Ripens through the fast; in the
-                // feast register, hits full grade and dims by ~30%.
                 DishHero(
                     dish = dish,
                     progress = if (phase == Phase.Fast) phaseProgress else 1f,
@@ -142,12 +159,27 @@ private fun RhythmHero(
                 )
             }
 
-            Text(
-                text = dish.name,
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 22.sp),
-                color = Parchment,
-                textAlign = TextAlign.Center,
-            )
+            // Dish name + tappable Reconsider affordance. Appetites change;
+            // swapping mid-fast is a first-class action, not a buried setting.
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = dish.name,
+                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = 22.sp),
+                    color = Parchment,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.clickable(onClick = onReconsider),
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "Reconsider →",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp,
+                    ),
+                    color = Copper.copy(alpha = 0.85f),
+                    modifier = Modifier.clickable(onClick = onReconsider),
+                )
+            }
 
             Text(
                 text = formatRemaining(remainingMs),

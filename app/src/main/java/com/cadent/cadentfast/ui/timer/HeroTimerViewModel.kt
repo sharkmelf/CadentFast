@@ -5,11 +5,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.cadent.cadentfast.CadentFastApp
 import com.cadent.cadentfast.catalog.Catalog
+import com.cadent.cadentfast.catalog.DietaryTag
 import com.cadent.cadentfast.catalog.Dish
 import com.cadent.cadentfast.timer.Cadences
 import com.cadent.cadentfast.timer.Phase
 import com.cadent.cadentfast.timer.Rhythm
+import java.util.Calendar
+import java.util.TimeZone
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -17,18 +21,23 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * Hero timer state — the view of the world the rhythm screen renders against.
+ * Hero timer state. The rhythm is the source of truth; "Welcome" is the only
+ * state without one. The lock flow (picker) is a UI sub-state held in-memory.
  *
- * The rhythm is the source of truth (from [com.cadent.cadentfast.timer.RhythmRepository]).
- * "Welcome" is the only state where no rhythm exists. Once the rhythm begins,
- * the state machine derives Fast / Feast / BreakFastReveal from the rhythm's
- * computed phase plus the latest boundary event.
- *
- * In PR A' we hardcode [Catalog.default] as the locked dish. PR B' replaces
- * that with the dish-selection screen.
+ * - [Welcome] — no rhythm yet. The user has just opened the app.
+ * - [ChoosingDish] — the menu picker is open. The reason ([context]) controls
+ *   what happens when the user taps a dish.
+ * - [FastRunning] / [FeastRunning] — the rhythm is active; the screen renders
+ *   the ring + dish + sub-line.
+ * - [BreakFastReveal] — a phase boundary just crossed into feast. The reveal
+ *   screen shows full-grade dish + "Your table." until the user acknowledges.
  */
 sealed interface HeroTimerState {
     data object Welcome : HeroTimerState
+    data class ChoosingDish(
+        val context: ChooseContext,
+        val initialDietaryFilters: Set<DietaryTag>,
+    ) : HeroTimerState
     data class FastRunning(
         val rhythm: Rhythm,
         val dish: Dish,
@@ -39,16 +48,18 @@ sealed interface HeroTimerState {
         val dish: Dish,
         val nowMs: Long,
     ) : HeroTimerState
-    /**
-     * A short-lived state immediately after a phase boundary, while the UI
-     * presents the cinematic reveal (PR C' adds the animation; PR A' just shows
-     * the static reveal). Acknowledging dismisses back to FeastRunning.
-     */
     data class BreakFastReveal(
         val rhythm: Rhythm,
         val dish: Dish,
         val nowMs: Long,
     ) : HeroTimerState
+}
+
+sealed interface ChooseContext {
+    /** Welcome → picker → begin rhythm with the chosen dish. */
+    data object BeginRhythm : ChooseContext
+    /** Mid-fast swap. Choosing returns to the running screen with the new dish locked. */
+    data object SwapMidRhythm : ChooseContext
 }
 
 class HeroTimerViewModel(app: Application) : AndroidViewModel(app) {
@@ -63,19 +74,38 @@ class HeroTimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Reconcile on every fresh subscription so a foreground return catches any
-     * missed boundary.
+     * Lock-flow sub-state. Lives only in memory. Process kill mid-picker sends
+     * the user back to Welcome (if no rhythm) or to the running screen (if a
+     * rhythm exists); the in-progress picker is forgotten, which is fine.
      */
+    private val chooseContext = MutableStateFlow<ChooseContext?>(null)
+
     init {
+        // Catch any boundary that crossed while the process was dead.
         repo.reconcile()
     }
 
     val state: StateFlow<HeroTimerState> =
-        combine(repo.rhythm, tickFlow, repo.boundaryCrossed) { rhythm, now, boundary ->
-            if (rhythm == null || !rhythm.isActive(now)) return@combine HeroTimerState.Welcome
+        combine(repo.rhythm, tickFlow, repo.boundaryCrossed, chooseContext) {
+                rhythm, now, boundary, context ->
+            if (rhythm == null || !rhythm.isActive(now)) {
+                // No rhythm yet. Either Welcome, or BeginRhythm picker open.
+                return@combine when (context) {
+                    ChooseContext.BeginRhythm -> HeroTimerState.ChoosingDish(
+                        context = context,
+                        initialDietaryFilters = smartDefaultFiltersForBegin(),
+                    )
+                    else -> HeroTimerState.Welcome
+                }
+            }
+            // Active rhythm. If the user opened the picker for a swap, show it.
+            if (context == ChooseContext.SwapMidRhythm) {
+                return@combine HeroTimerState.ChoosingDish(
+                    context = context,
+                    initialDietaryFilters = smartDefaultFiltersForSwap(rhythm, now),
+                )
+            }
             val dish = rhythm.lockedDishId?.let { Catalog.byId(it) } ?: Catalog.default
-            // If the most recent boundary event is still un-acknowledged AND
-            // we're now in feast, present the break-fast reveal.
             if (boundary != null && boundary.enteringPhase == Phase.Feast && rhythm.phase(now) == Phase.Feast) {
                 return@combine HeroTimerState.BreakFastReveal(rhythm, dish, now)
             }
@@ -85,19 +115,40 @@ class HeroTimerViewModel(app: Application) : AndroidViewModel(app) {
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), HeroTimerState.Welcome)
 
-    /**
-     * Begin the rhythm with the dev default cadence and a hardcoded dish for
-     * PR A'. PR B' replaces this with a real dish-selection flow.
-     */
-    fun beginRhythmDevDefault() {
-        repo.beginRhythm(
-            cadence = Cadences.default,
-            dishId = Catalog.default.id,
-            startEpochMs = System.currentTimeMillis(),
-        )
+    /** Welcome → open the dish picker to begin the rhythm. */
+    fun onShowMeToMyTable() {
+        chooseContext.value = ChooseContext.BeginRhythm
     }
 
-    /** Dismiss the break-fast reveal and slide into the feast register. */
+    /** Running screen → open the dish picker to swap the locked dish. */
+    fun onReconsider() {
+        chooseContext.value = ChooseContext.SwapMidRhythm
+    }
+
+    /** Picker → user picked a dish. Either begins the rhythm or swaps. */
+    fun onDishChosen(dish: Dish) {
+        when (chooseContext.value) {
+            ChooseContext.BeginRhythm -> {
+                repo.beginRhythm(
+                    cadence = Cadences.default,
+                    dishId = dish.id,
+                    startEpochMs = System.currentTimeMillis(),
+                )
+            }
+            ChooseContext.SwapMidRhythm -> {
+                repo.swapLockedDish(dish.id)
+            }
+            null -> { /* picker closed; ignore */ }
+        }
+        chooseContext.value = null
+    }
+
+    /** Picker → system back. Returns to Welcome or to the running screen. */
+    fun onBackFromPicker() {
+        chooseContext.value = null
+    }
+
+    /** Dismiss the break-fast reveal; the screen slides into feast register. */
     fun acknowledgeBreakFastReveal() {
         repo.acknowledgeBoundaryCrossed()
     }
@@ -106,5 +157,41 @@ class HeroTimerViewModel(app: Application) : AndroidViewModel(app) {
     fun endRhythm() {
         repo.endRhythm()
         repo.acknowledgeBoundaryCrossed()
+        chooseContext.value = null
+    }
+
+    /**
+     * Smart-default filter pre-activation for the begin flow. We pick filters
+     * based on the *hour the upcoming break-fast falls at* (default cadence's
+     * fast length from now). Mornings get Vegetarian + Mediterranean
+     * pre-activated for the lighter break-fast register; afternoons and
+     * evenings get nothing pre-activated so the user sees the full catalog.
+     *
+     * The behavior is invisible to the user — they just see the right dishes
+     * for their context and can clear with one tap.
+     */
+    private fun smartDefaultFiltersForBegin(): Set<DietaryTag> {
+        val breakFastEpochMs = System.currentTimeMillis() + Cadences.default.fastMs
+        return smartDefaultFiltersForBreakFastAt(breakFastEpochMs)
+    }
+
+    private fun smartDefaultFiltersForSwap(rhythm: Rhythm, nowMs: Long): Set<DietaryTag> {
+        // If currently in fast, the upcoming break-fast is the next boundary.
+        // If currently in feast, the upcoming break-fast is two boundaries away.
+        val breakFastEpochMs = when (rhythm.phase(nowMs)) {
+            Phase.Fast -> rhythm.nextBoundaryEpochMs(nowMs)
+            Phase.Feast -> rhythm.nextBoundaryEpochMs(nowMs) + rhythm.cadence.fastMs
+        }
+        return smartDefaultFiltersForBreakFastAt(breakFastEpochMs)
+    }
+
+    private fun smartDefaultFiltersForBreakFastAt(epochMs: Long): Set<DietaryTag> {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.timeInMillis = epochMs
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        return when (hour) {
+            in 5..10 -> setOf(DietaryTag.Vegetarian, DietaryTag.Mediterranean)
+            else -> emptySet()
+        }
     }
 }
